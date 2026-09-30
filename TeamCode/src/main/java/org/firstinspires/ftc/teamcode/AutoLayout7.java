@@ -133,28 +133,21 @@ public class AutoLayout7 extends LinearOpMode {
         //==========================
 
         driveStraight(24, 0);//Drive straight 24 inches, or one tile
-
         sleep(100);
-
-        //turnToAngle(88);
-
         //sleep(500);
-
         //driveStraight(20,88);
         //sleep(500);
-
-        strafeLeft(20, 88);
-
-        sleep(500);
-
-        strafeLeft(-20, 88);
-        sleep(500);
-        driveStraight(-20,88);
-        sleep(500);
+        strafeLeft(37, 0);
+        sleep(100);
+        turnToAngle(180);
+        sleep(100);
+        //strafeLeft(-20, 88);
+        //sleep(500);
+        driveStraight(24,180);
+        sleep(100);
         turnToAngle(0);
-        sleep(500);
-        driveStraight(-115,0);
-
+        sleep(100);
+        driveStraight(42,0);
         stopMotors();
     }
 
