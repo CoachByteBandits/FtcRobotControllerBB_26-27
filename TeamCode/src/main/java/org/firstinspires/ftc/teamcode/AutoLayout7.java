@@ -10,7 +10,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 
 
-@Autonomous(name = "AutoLayout7", group = "PID")
+@Autonomous(name = "AutoLayout7(Encoder)", group = "PID")
 public class AutoLayout7 extends LinearOpMode {
 
     //==========================
@@ -69,24 +69,11 @@ public class AutoLayout7 extends LinearOpMode {
         // Hardware Mapping
         //==========================
 
-        leftFrontDrive =
-                hardwareMap.get(DcMotor.class, "leftFrontDrive");
-
-        rightFrontDrive =
-                hardwareMap.get(DcMotor.class, "rightFrontDrive");
-
-        leftBackDrive =
-                hardwareMap.get(DcMotor.class, "leftBackDrive");
-
-        rightBackDrive =
-                hardwareMap.get(DcMotor.class, "rightBackDrive");
-
-        pinpoint = hardwareMap.get(
-                GoBildaPinpointDriver.class,
-                "pinpoint"
-        );
-
-
+        leftFrontDrive = hardwareMap.get(DcMotor.class, "leftFrontDrive");
+        rightFrontDrive = hardwareMap.get(DcMotor.class, "rightFrontDrive");
+        leftBackDrive = hardwareMap.get(DcMotor.class, "leftBackDrive");
+        rightBackDrive = hardwareMap.get(DcMotor.class, "rightBackDrive");
+        pinpoint = hardwareMap.get(GoBildaPinpointDriver.class, "pinpoint");
 
         //==========================
         // Reverse motors if needed
@@ -120,14 +107,11 @@ public class AutoLayout7 extends LinearOpMode {
         // Create PID Controllers
         //==========================
 
-        drivePID =
-                new PIDController(DRIVE_KP, DRIVE_KI, DRIVE_KD);
+        drivePID = new PIDController(DRIVE_KP, DRIVE_KI, DRIVE_KD);
 
-        headingPID =
-                new PIDController(TURN_KP, TURN_KI, TURN_KD);
+        headingPID = new PIDController(TURN_KP, TURN_KI, TURN_KD);
 
-        strafePID =
-                new PIDController(STRAFE_KP, STRAFE_KI, STRAFE_KD);
+        strafePID = new PIDController(STRAFE_KP, STRAFE_KI, STRAFE_KD);
 
         drivePID.setOutputRange(0.80);
         headingPID.setOutputRange(0.25);
@@ -148,16 +132,16 @@ public class AutoLayout7 extends LinearOpMode {
         // Autonomous Routine
         //==========================
 
-        driveStraight(115, 0);
+        driveStraight(24, 0);//Drive straight 24 inches, or one tile
 
-        sleep(500);
+        sleep(100);
 
-        turnToAngle(88);
+        //turnToAngle(88);
 
-        sleep(500);
+        //sleep(500);
 
-        driveStraight(20,88);
-        sleep(500);
+        //driveStraight(20,88);
+        //sleep(500);
 
         strafeLeft(20, 88);
 
