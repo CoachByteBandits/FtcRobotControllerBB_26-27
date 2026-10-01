@@ -137,17 +137,20 @@ public class AutoLayout7 extends LinearOpMode {
         //sleep(500);
         //driveStraight(20,88);
         //sleep(500);
+        //ADD THE SHOOT CODE OVER HERE
         strafeLeft(37, 0);
         sleep(100);
         turnToAngle(180);
         sleep(100);
         //strafeLeft(-20, 88);
         //sleep(500);
+        //SSstart intake
         driveStraight(24,180);
         sleep(100);
+        //EEend intake
         turnToAngle(0);
         sleep(100);
-        driveStraight(42,0);
+        driveStraight(42,0);//park code
         stopMotors();
     }
 
