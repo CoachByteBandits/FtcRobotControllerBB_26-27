@@ -15,7 +15,6 @@ public class AutoLayout7 extends LinearOpMode {
     //==========================
     // Hardware
     //==========================
-
     private DcMotor leftFrontDrive;
     private DcMotor rightFrontDrive;
     private DcMotor leftBackDrive;
