@@ -11,11 +11,9 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 
 
 @Autonomous(name = "AutoLayout2", group = "PID")
-public class AutoLayout2 extends LinearOpMode {
+public class AutoLayout1 extends LinearOpMode {
 
-    //==========================
     // Hardware
-    //==========================
 
     private DcMotor leftFrontDrive;
     private DcMotor rightFrontDrive;
@@ -23,20 +21,14 @@ public class AutoLayout2 extends LinearOpMode {
     private DcMotor rightBackDrive;
     private GoBildaPinpointDriver pinpoint;
 
-
-
-
-    //==========================
     // PID Controllers
-    //==========================
 
     private PIDController drivePID;
     private PIDController headingPID;
     private PIDController strafePID;
 
-    //==========================
     // Robot Constants
-    //==========================
+
 
     // goBILDA 5202 312 RPM motors
     static final double TICKS_PER_REV = 537.7;
@@ -45,10 +37,10 @@ public class AutoLayout2 extends LinearOpMode {
     static final double TICKS_PER_INCH =
             TICKS_PER_REV / (Math.PI * WHEEL_DIAMETER);
 
-    //==========================
+
     // PID Constants
     // Tune these later
-    //==========================
+
 
     static final double DRIVE_KP = 0.0025;
     static final double DRIVE_KI = 0.0000;
@@ -69,31 +61,22 @@ public class AutoLayout2 extends LinearOpMode {
         // Hardware Mapping
         //==========================
 
-        leftFrontDrive =
-                hardwareMap.get(DcMotor.class, "leftFrontDrive");
+        leftFrontDrive = hardwareMap.get(DcMotor.class, "leftFrontDrive");
 
-        rightFrontDrive =
-                hardwareMap.get(DcMotor.class, "rightFrontDrive");
+        rightFrontDrive = hardwareMap.get(DcMotor.class, "rightFrontDrive");
 
-        leftBackDrive =
-                hardwareMap.get(DcMotor.class, "leftBackDrive");
+        leftBackDrive = hardwareMap.get(DcMotor.class, "leftBackDrive");
 
-        rightBackDrive =
-                hardwareMap.get(DcMotor.class, "rightBackDrive");
+        rightBackDrive = hardwareMap.get(DcMotor.class, "rightBackDrive");
 
-        pinpoint = hardwareMap.get(
-                GoBildaPinpointDriver.class,
-                "pinpoint"
-        );
+        pinpoint = hardwareMap.get(GoBildaPinpointDriver.class, "pinpoint");
 
 
 
-        //==========================
-        // Reverse motors if needed
-        //==========================
 
-        // Uncomment if your robot drives backwards.
-        //
+
+        // Uncomment if robot drives backwards.
+
         leftFrontDrive.setDirection(DcMotor.Direction.REVERSE);
         leftBackDrive.setDirection(DcMotor.Direction.REVERSE);
 
@@ -120,14 +103,11 @@ public class AutoLayout2 extends LinearOpMode {
         // Create PID Controllers
         //==========================
 
-        drivePID =
-                new PIDController(DRIVE_KP, DRIVE_KI, DRIVE_KD);
+        drivePID = new PIDController(DRIVE_KP, DRIVE_KI, DRIVE_KD);
 
-        headingPID =
-                new PIDController(TURN_KP, TURN_KI, TURN_KD);
+        headingPID = new PIDController(TURN_KP, TURN_KI, TURN_KD);
 
-        strafePID =
-                new PIDController(STRAFE_KP, STRAFE_KI, STRAFE_KD);
+        strafePID = new PIDController(STRAFE_KP, STRAFE_KI, STRAFE_KD);
 
         drivePID.setOutputRange(0.80);
         headingPID.setOutputRange(0.25);
@@ -148,28 +128,38 @@ public class AutoLayout2 extends LinearOpMode {
         // Autonomous Routine
         //==========================
 
-        driveStraight(115, 0);
+        strafeLeft(-48, 0);
 
-        sleep(500);
+        sleep(100);
 
-        turnToAngle(88);
+        //turnToAngle(88);
+        //shooting happens here
 
-        sleep(500);
+        //sleep(500);
 
-        driveStraight(20,88);
-        sleep(500);
+        strafeLeft(36,0);
 
-        strafeLeft(20, 88);
+        sleep(100);
 
-        sleep(500);
+        turnToAngle(180);
 
-        strafeLeft(-20, 88);
-        sleep(500);
-        driveStraight(-20,88);
-        sleep(500);
-        turnToAngle(0);
-        sleep(500);
-        driveStraight(-115,0);
+        sleep(100);
+
+        driveStraight(24,180);
+
+        sleep(100);
+
+        driveStraight(-108, 180);
+
+        //sleep(100);
+
+        //strafeLeft(-20, 88);
+    //    sleep(500);
+      //  driveStraight(-20,88);
+        //sleep(500);
+//        turnToAngle(0);
+   //     sleep(500);
+     //   driveStraight(-115,0);
 
         stopMotors();
     }
@@ -207,19 +197,13 @@ public class AutoLayout2 extends LinearOpMode {
         while (opModeIsActive()) {
 
             // Average encoder position
-            double currentTicks =
-                    (Math.abs(leftFrontDrive.getCurrentPosition())
-                            + Math.abs(rightFrontDrive.getCurrentPosition())
-                            + Math.abs(leftBackDrive.getCurrentPosition())
-                            + Math.abs(rightBackDrive.getCurrentPosition()))
-                            / 4.0;
+            double currentTicks = (Math.abs(leftFrontDrive.getCurrentPosition()) + Math.abs(rightFrontDrive.getCurrentPosition()) + Math.abs(leftBackDrive.getCurrentPosition()) + Math.abs(rightBackDrive.getCurrentPosition())) / 4.0;
 
             // Current robot heading
             double heading = getHeadingRadians();
 
             // PID outputs
-            double drivePower =
-                    drivePID.getComputedOutput(currentTicks);
+            double drivePower = drivePID.getComputedOutput(currentTicks);
 
             drivePower *= direction;
 
@@ -227,22 +211,12 @@ public class AutoLayout2 extends LinearOpMode {
 
             double slowdownFactor = remaining / 1200.0;
 
-            slowdownFactor = Math.max(
-                    0.35,
-                    Math.min(1.0, slowdownFactor)
-            );
+            slowdownFactor = Math.max(0.35, Math.min(1.0, slowdownFactor));
 
             drivePower *= slowdownFactor;
-            double turnCorrection =
-                    headingPID.getComputedAngleOutput(heading);
+            double turnCorrection = headingPID.getComputedAngleOutput(heading);
 
-            turnCorrection = Math.max(
-                    -0.15,
-                    Math.min(0.15, turnCorrection)
-            );
-
-
-
+            turnCorrection = Math.max(-0.15, Math.min(0.15, turnCorrection));
 
             // Stop when close enough
             if (Math.abs(targetTicks - currentTicks) < 100) {
@@ -254,14 +228,7 @@ public class AutoLayout2 extends LinearOpMode {
 
 
             // Normalize motor powers
-            double max =
-                    Math.max(
-                            1.0,
-                            Math.max(
-                                    Math.abs(leftPower),
-                                    Math.abs(rightPower)
-                            )
-                    );
+            double max = Math.max(1.0, Math.max(Math.abs(leftPower), Math.abs(rightPower)));
 
             leftPower /= max;
             rightPower /= max;
@@ -277,14 +244,11 @@ public class AutoLayout2 extends LinearOpMode {
             telemetry.addData("Target Ticks", targetTicks);
             telemetry.addData("Current Ticks", currentTicks);
 
-            telemetry.addData("Drive Error",
-                    drivePID.getCurrentError());
+            telemetry.addData("Drive Error", drivePID.getCurrentError());
 
-            telemetry.addData("Heading",
-                    Math.toDegrees(heading));
+            telemetry.addData("Heading", Math.toDegrees(heading));
 
-            telemetry.addData("Heading Error",
-                    Math.toDegrees(headingPID.getCurrentError()));
+            telemetry.addData("Heading Error", Math.toDegrees(headingPID.getCurrentError()));
 
             telemetry.addData("Drive Power", drivePower);
             telemetry.addData("Turn Correction", turnCorrection);
@@ -320,8 +284,7 @@ public class AutoLayout2 extends LinearOpMode {
 
             double heading = getHeadingRadians();
 
-            double turnPower =
-                    headingPID.getComputedAngleOutput(heading);
+            double turnPower = headingPID.getComputedAngleOutput(heading);
 
             // Minimum power to overcome friction
             if (turnPower > 0 && turnPower < 0.15) {
@@ -332,8 +295,7 @@ public class AutoLayout2 extends LinearOpMode {
                 turnPower = -0.15;
             }
 
-            double errorDeg =
-                    Math.toDegrees(headingPID.getCurrentError());
+            double errorDeg = Math.toDegrees(headingPID.getCurrentError());
 
             // Stop within 3 degrees
             if (Math.abs(errorDeg) < 1) {
@@ -402,35 +364,22 @@ public class AutoLayout2 extends LinearOpMode {
 
             double heading = getHeadingRadians();
 
-            double strafePower =
-                    strafePID.getComputedOutput(currentTicks);
+            double strafePower = strafePID.getComputedOutput(currentTicks);
 
             strafePower *= direction;
 
-            double turnCorrection =
-                    headingPID.getComputedAngleOutput(heading);
+            double turnCorrection = headingPID.getComputedAngleOutput(heading);
 
-            turnCorrection = Math.max(
-                    -0.12,
-                    Math.min(0.12, turnCorrection)
-            );
+            turnCorrection = Math.max(-0.12, Math.min(0.12, turnCorrection));
 
-            if (Math.abs(targetTicks - currentTicks) < 20) {
-                break;
-            }
+            if (Math.abs(targetTicks - currentTicks) < 20) {break;}
 
             double lf = -strafePower + turnCorrection;
             double rf =  strafePower - turnCorrection;
             double lb =  strafePower + turnCorrection;
             double rb = -strafePower - turnCorrection;
 
-            double max = Math.max(
-                    1.0,
-                    Math.max(
-                            Math.max(Math.abs(lf), Math.abs(rf)),
-                            Math.max(Math.abs(lb), Math.abs(rb))
-                    )
-            );
+            double max = Math.max(1.0, Math.max(Math.max(Math.abs(lf), Math.abs(rf)), Math.max(Math.abs(lb), Math.abs(rb))));
 
             lf /= max;
             rf /= max;
@@ -464,9 +413,7 @@ public class AutoLayout2 extends LinearOpMode {
 
         Pose2D pose = pinpoint.getPosition();
 
-        return Math.toRadians(
-                pose.getHeading(AngleUnit.DEGREES)
-        );
+        return Math.toRadians(pose.getHeading(AngleUnit.DEGREES));
     }
 
     private void stopMotors() {
