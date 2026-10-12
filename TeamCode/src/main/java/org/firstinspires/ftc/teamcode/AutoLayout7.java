@@ -10,11 +10,13 @@ import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 
 
-@Autonomous(name = "AutoLayout7(Encoder)", group = "PID")
+@Autonomous(name = "AutoLayout7", group = "PID")
 public class AutoLayout7 extends LinearOpMode {
+
     //==========================
     // Hardware
     //==========================
+
     private DcMotor leftFrontDrive;
     private DcMotor rightFrontDrive;
     private DcMotor leftBackDrive;
@@ -24,10 +26,17 @@ public class AutoLayout7 extends LinearOpMode {
 
 
 
+    //==========================
+    // PID Controllers
+    //==========================
+
     private PIDController drivePID;
     private PIDController headingPID;
     private PIDController strafePID;
 
+    //==========================
+    // Robot Constants
+    //==========================
 
     // goBILDA 5202 312 RPM motors
     static final double TICKS_PER_REV = 537.7;
@@ -60,11 +69,24 @@ public class AutoLayout7 extends LinearOpMode {
         // Hardware Mapping
         //==========================
 
-        leftFrontDrive = hardwareMap.get(DcMotor.class, "leftFrontDrive");
-        rightFrontDrive = hardwareMap.get(DcMotor.class, "rightFrontDrive");
-        leftBackDrive = hardwareMap.get(DcMotor.class, "leftBackDrive");
-        rightBackDrive = hardwareMap.get(DcMotor.class, "rightBackDrive");
-        pinpoint = hardwareMap.get(GoBildaPinpointDriver.class, "pinpoint");
+        leftFrontDrive =
+                hardwareMap.get(DcMotor.class, "leftFrontDrive");
+
+        rightFrontDrive =
+                hardwareMap.get(DcMotor.class, "rightFrontDrive");
+
+        leftBackDrive =
+                hardwareMap.get(DcMotor.class, "leftBackDrive");
+
+        rightBackDrive =
+                hardwareMap.get(DcMotor.class, "rightBackDrive");
+
+        pinpoint = hardwareMap.get(
+                GoBildaPinpointDriver.class,
+                "pinpoint"
+        );
+
+
 
         //==========================
         // Reverse motors if needed
@@ -98,11 +120,14 @@ public class AutoLayout7 extends LinearOpMode {
         // Create PID Controllers
         //==========================
 
-        drivePID = new PIDController(DRIVE_KP, DRIVE_KI, DRIVE_KD);
+        drivePID =
+                new PIDController(DRIVE_KP, DRIVE_KI, DRIVE_KD);
 
-        headingPID = new PIDController(TURN_KP, TURN_KI, TURN_KD);
+        headingPID =
+                new PIDController(TURN_KP, TURN_KI, TURN_KD);
 
-        strafePID = new PIDController(STRAFE_KP, STRAFE_KI, STRAFE_KD);
+        strafePID =
+                new PIDController(STRAFE_KP, STRAFE_KI, STRAFE_KD);
 
         drivePID.setOutputRange(0.80);
         headingPID.setOutputRange(0.25);
@@ -123,31 +148,36 @@ public class AutoLayout7 extends LinearOpMode {
         // Autonomous Routine
         //==========================
 
-        driveStraight(24, 0);//Drive straight 24 inches, or one tile
+        driveStraight(28, 0);
+
         sleep(100);
-        //sleep(500);
-        //driveStraight(20,88);
-        //sleep(500);
-        //ADD THE SHOOT CODE OVER HERE
-        strafeLeft(37, 0);
+        strafeLeft(45,0);
+
+        turnToAngle(180);
+
         sleep(100);
-        //turnToAngle(180);
-        turnToAngle(90);
-        turnToAngle(90);
-        sleep(100);
-        //strafeLeft(-20, 88);
-        //sleep(500);
-        //SSstart intake
+
         driveStraight(24,180);
         sleep(100);
-        //EEend intake
+
         turnToAngle(0);
         sleep(100);
-        driveStraight(42,0);//park code
+
+        driveStraight(30,0);
+        sleep(100);
+
+        strafeLeft(20,0);
+
         stopMotors();
     }
 
+//========================================================
+// PART 2 STARTS BELOW
+//========================================================
 
+    //========================================================
+    // DRIVE STRAIGHT USING ENCODERS + IMU
+    //========================================================
 
     private void driveStraight(double inches, double headingDegrees) {
         double direction = Math.signum(inches);
@@ -277,36 +307,18 @@ public class AutoLayout7 extends LinearOpMode {
     //========================================================
 
     private void turnToAngle(double targetAngleDegrees) {
+
+        headingPID.setOutputRange(0.85);
         headingPID.reset();
+
+        headingPID.setSetPoint(Math.toRadians(targetAngleDegrees));
 
         while (opModeIsActive()) {
 
             double heading = getHeadingRadians();
 
-            double target = Math.toRadians(targetAngleDegrees);
-
-            // Calculate shortest angle error
-            double error = target - heading;
-
-            while (error > Math.PI) {
-                error -= 2.0 * Math.PI;
-            }
-
-            while (error < -Math.PI) {
-                error += 2.0 * Math.PI;
-            }
-
-            double errorDeg = Math.toDegrees(error);
-
-            // Stop within 1 degree
-            if (Math.abs(errorDeg) < 1.0) {
-                break;
-            }
-
-            double turnPower = TURN_KP * error;
-
-            // Limit power
-            turnPower = Math.max(-0.85, Math.min(0.85, turnPower));
+            double turnPower =
+                    headingPID.getComputedAngleOutput(heading);
 
             // Minimum power to overcome friction
             if (turnPower > 0 && turnPower < 0.15) {
@@ -317,65 +329,27 @@ public class AutoLayout7 extends LinearOpMode {
                 turnPower = -0.15;
             }
 
+            double errorDeg =
+                    Math.toDegrees(headingPID.getCurrentError());
+
+            // Stop within 3 degrees
+            if (Math.abs(errorDeg) < 1) {
+                break;
+            }
+
             leftFrontDrive.setPower(-turnPower);
             leftBackDrive.setPower(-turnPower);
 
             rightFrontDrive.setPower(turnPower);
             rightBackDrive.setPower(turnPower);
 
+            telemetry.addLine("Turning");
             telemetry.addData("Target", targetAngleDegrees);
             telemetry.addData("Current", Math.toDegrees(heading));
-            telemetry.addData("Wrapped Error", errorDeg);
+            telemetry.addData("Error", errorDeg);
             telemetry.addData("Turn Power", turnPower);
             telemetry.update();
         }
-
-        stopMotors();
-        sleep(200);
-    }
-
- //       headingPID.setOutputRange(0.85);
-   //     headingPID.reset();
-//
-  //      headingPID.setSetPoint(Math.toRadians(targetAngleDegrees));
-//
-  //      while (opModeIsActive()) {
-//
-  //          double heading = getHeadingRadians();
-//
-  //          double turnPower =
-    ///                headingPID.getComputedAngleOutput(heading);
-//
-  //          // Minimum power to overcome friction
-    //  /      if (turnPower > 0 && turnPower < 0.15) {
-     //           turnPower = 0.15;
-      //      }
-//
-  //          if (turnPower < 0 && turnPower > -0.15) {
-    //            turnPower = -0.15;
-      //      }
-//
-  //          double errorDeg =
-    //                Math.toDegrees(headingPID.getCurrentError());
-//
-  //          // Stop within 3 degrees
-    //        if (Math.abs(errorDeg) < 1) {
-      ///          break;
-         //   }
-//
-  //          leftFrontDrive.setPower(-turnPower);
-    //        leftBackDrive.setPower(-turnPower);
-//
-  //          rightFrontDrive.setPower(turnPower);
-    //        rightBackDrive.setPower(turnPower);
-//
-  //          telemetry.addLine("Turning");
-    //        telemetry.addData("Target", targetAngleDegrees);
-      //      telemetry.addData("Current", Math.toDegrees(heading));
-        //    telemetry.addData("Error", errorDeg);
-          //  telemetry.addData("Turn Power", turnPower);
-            //telemetry.update();
-        //}
 
         stopMotors();
 
