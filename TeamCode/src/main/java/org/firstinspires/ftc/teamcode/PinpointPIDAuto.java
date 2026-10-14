@@ -568,7 +568,7 @@ public class PinpointPIDAuto extends LinearOpMode {
     // TURN TO ANGLE
     //
     // Uses Pinpoint's internal IMU.
-    // ========================================================= 
+    // =========================================================
 
     private void turnToAngle(
             double targetAngleDegrees
