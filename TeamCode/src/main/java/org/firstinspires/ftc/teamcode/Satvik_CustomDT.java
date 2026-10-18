@@ -18,11 +18,11 @@ public class Satvik_CustomDT extends LinearOpMode {
     @Override
     public void runOpMode() {
         // Hardware setup
-        leftFrontDrive  = hardwareMap.get(DcMotorEx.class, "left_Front_Drive");
-        leftBackDrive   = hardwareMap.get(DcMotorEx.class, "left_Back_Drive");
-        rightFrontDrive = hardwareMap.get(DcMotorEx.class, "right_Front_Drive");
-        rightBackDrive  = hardwareMap.get(DcMotorEx.class, "right_Back_Drive");
-        intakeMotor        = hardwareMap.get(DcMotorEx.class, "launcher");
+        leftFrontDrive  = hardwareMap.get(DcMotorEx.class, "leftFrontDrive");
+        leftBackDrive   = hardwareMap.get(DcMotorEx.class, "leftBackDrive");
+        rightFrontDrive = hardwareMap.get(DcMotorEx.class, "rightFrontDrive");
+        rightBackDrive  = hardwareMap.get(DcMotorEx.class, "rightBackDrive");
+        intakeMotor     = hardwareMap.get(DcMotorEx.class, "intakeMotor");
 
         // Reverse left side motors for proper forward movement
         leftFrontDrive.setDirection(DcMotorEx.Direction.REVERSE);
