@@ -43,10 +43,13 @@ public class PinpointPIDAuto extends LinearOpMode {
     // Max turn power while driving/strafing/holding (high enough to recover from a hit)
     static final double HOLD_TURN_LIMIT = 0.5;
 
-    // Minimum strafe power so the robot doesn't stall just short of the target.
-    // Only applies while the strafe error is bigger than the deadband.
+    // Minimum powers so the robot doesn't stall just short of the target.
+    // Only apply while the error is bigger than the deadband.
     static final double MIN_STRAFE_POWER = 0.22;
+    static final double MIN_DRIVE_POWER = 0.15;
+    static final double MIN_TURN_POWER = 0.12;
     static final double MIN_POWER_DEADBAND_IN = 0.6;
+    static final double MIN_TURN_DEADBAND_RAD = Math.toRadians(1.5);
 
     // ---------------- AXIS SETUP (set from the Init push test) ----------------
     // The code works in this frame:
@@ -84,10 +87,10 @@ public class PinpointPIDAuto extends LinearOpMode {
 
     // ---------------- TOLERANCES ----------------
 
-    private static final double POSITION_TOLERANCE_IN = 1.5;
-    private static final double HEADING_TOLERANCE_DEG = 3.0;
+    private static final double POSITION_TOLERANCE_IN = 2.0;
+    private static final double HEADING_TOLERANCE_DEG = 4.0;
 
-    private static final long MOVEMENT_TIMEOUT_MS = 4000;
+    private static final long MOVEMENT_TIMEOUT_MS = 2000;
 
     // ---------------- BACKGROUND CONTROL THREAD ----------------
 
@@ -203,24 +206,20 @@ public class PinpointPIDAuto extends LinearOpMode {
             driveStraight(-24, 88);
             holdPoseFor(100, 88);
 
-            driveStraight(24,88);
+            driveStraight(24, 88);
             holdPoseFor(100, 88);
 
-            strafeLeft(-24,88);
+            strafeLeft(-24, 88);
             holdPoseFor(100, 88);
 
-            driveStraight(-24,88);
+            driveStraight(-24, 88);
             holdPoseFor(100, 88);
 
             turnToAngle(0);
             holdPoseFor(100, 0);
 
-            driveStraight(-24,0);
+            driveStraight(-24, 0);
             holdPoseFor(100, 0);
-
-
-
-
 
             // Keep holding the final pose until auto ends.
             while (opModeIsActive()) {
@@ -371,8 +370,14 @@ public class PinpointPIDAuto extends LinearOpMode {
             double leftPower = -strafePID.getComputedOutput(leftError);
             double turnPower = headingPID.getComputedAngleOutput(headingRadians);
 
-            // Strafe minimum power: keeps the robot from stalling just short of the target.
+            // Minimum power: keeps the robot from stalling just short of the target.
             leftPower = applyMinPower(leftPower, leftError, MIN_STRAFE_POWER);
+            forwardPower = applyMinPower(forwardPower, forwardError, MIN_DRIVE_POWER);
+
+            if (Math.abs(headingErrorRadians) > MIN_TURN_DEADBAND_RAD
+                    && Math.abs(turnPower) < MIN_TURN_POWER) {
+                turnPower = Math.signum(turnPower) * MIN_TURN_POWER;
+            }
 
             posErrorNow = Math.hypot(errorX, errorY);
             headingErrorNowDeg = Math.toDegrees(headingErrorRadians);
