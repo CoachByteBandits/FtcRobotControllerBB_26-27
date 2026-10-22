@@ -191,7 +191,7 @@ public class PinpointPIDAuto extends LinearOpMode {
         controlThread.start();
 
         try {
-            driveStraight(24, 0);
+            driveStraight(24.1, 0);
             holdPoseFor(100, 0);
 
             turnToAngle(88);
