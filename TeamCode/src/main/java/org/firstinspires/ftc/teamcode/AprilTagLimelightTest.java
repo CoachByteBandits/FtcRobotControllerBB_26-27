@@ -38,8 +38,8 @@ public class AprilTagLimelightTest extends OpMode {
         imu = hardwareMap.get(IMU.class, "imu");
 
         RevHubOrientationOnRobot revHubOrientationOnRobot = new RevHubOrientationOnRobot(
-                RevHubOrientationOnRobot.LogoFacingDirection.UP,
-                RevHubOrientationOnRobot.UsbFacingDirection.FORWARD);
+                RevHubOrientationOnRobot.LogoFacingDirection.BACKWARD,
+                RevHubOrientationOnRobot.UsbFacingDirection.UP);
 
         imu.initialize(new IMU.Parameters(revHubOrientationOnRobot));
 
@@ -108,9 +108,11 @@ public class AprilTagLimelightTest extends OpMode {
 
                     double directDistanceMeters = Math.sqrt(x*x + y*y + z*z);
                     double forwardInches = z * 39.3701;
+                    double lateralInches = x * 39.3701;
                     double directInches = directDistanceMeters * 39.3701;
 
                     telemetry.addData("Tag " + tagID + " Forward (Inches)", "%.2f", forwardInches);
+                    telemetry.addData("Tag " + tagID + " Lateral (Inches)", "%.2f", lateralInches);
                     telemetry.addData("Tag " + tagID + " Direct (Inches)", "%.2f", directInches);
                 }
             }
