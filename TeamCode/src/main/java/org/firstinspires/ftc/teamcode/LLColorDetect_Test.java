@@ -16,16 +16,16 @@ import java.util.List;
 public class LLColorDetect_Test extends LinearOpMode {
 
     //Tuning constants
-    private static final int PIPELINE_INDEX = 0;
-    private static final double MIN_AREA = 0.05;
-    private static final double STOP_AREA = 8.0;
-    private static final double TURN_KP = 0.02;
-    private static final double MAX_TURN = 0.4;
-    private static final double AIM_TOLERANCE_DEG = 2.0;
-    private static final double MAX_DRIVE = 0.5;
-    private static final double MIN_DRIVE = 0.15;
-    private static final double DRIVE_ALLOWED_DEG = 10.0;
-    private static final double SEARCH_TURN = 0.2;
+    private static final int pipelineIndex = 2;
+    private static final double minArea = 0.05;
+    private static final double stopArea = 8.0;
+    private static final double turnKP = 0.02;
+    private static final double maxTurn = 0.4;
+    private static final double aimToleranceDegree = 2.0;
+    private static final double maxDrive = 0.5;
+    private static final double minDrive = 0.15;
+    private static final double driveAllowedDegree = 10.0;
+    private static final double searchTurn = 0.2;
 
     private Limelight3A limelight;
     private DcMotor frontLeft, frontRight, backLeft, backRight;
@@ -55,7 +55,7 @@ public class LLColorDetect_Test extends LinearOpMode {
 
         limelight = hardwareMap.get(Limelight3A.class, "limelight");
         limelight.setPollRateHz(100);
-        limelight.pipelineSwitch(PIPELINE_INDEX);
+        limelight.pipelineSwitch(pipelineIndex);
 
         telemetry.addLine("Ready. Press START to chase pollen.");
         telemetry.update();
@@ -70,26 +70,26 @@ public class LLColorDetect_Test extends LinearOpMode {
 
             if (best == null) {
                 // No pollen seen: slowly spin to look for some.
-                setDrive(0, SEARCH_TURN);
+                setDrive(0, searchTurn);
                 telemetry.addData("State", "SEARCHING");
             } else {
                 double tx = best.getTargetXDegrees();
                 double ty = best.getTargetYDegrees();
                 double area = best.getTargetArea();
 
-                if (area >= STOP_AREA) {
+                if (area >= stopArea) {
                     setDrive(0, 0);
                     telemetry.addData("State", "AT POLLEN");
                 } else {
                     double turn = 0;
-                    if (Math.abs(tx) > AIM_TOLERANCE_DEG) {
-                        turn = Range.clip(tx * TURN_KP, -MAX_TURN, MAX_TURN);
+                    if (Math.abs(tx) > aimToleranceDegree) {
+                        turn = Range.clip(tx * turnKP, -maxTurn, maxTurn);
                     }
 
                     double drive = 0;
-                    if (Math.abs(tx) < DRIVE_ALLOWED_DEG) {
-                        double closeness = Range.clip(area / STOP_AREA, 0, 1);
-                        drive = MAX_DRIVE - (MAX_DRIVE - MIN_DRIVE) * closeness;
+                    if (Math.abs(tx) < driveAllowedDegree) {
+                        double closeness = Range.clip(area / stopArea, 0, 1);
+                        drive = maxDrive - (maxDrive - minDrive) * closeness;
                     }
 
                     setDrive(drive, turn);
@@ -117,7 +117,7 @@ public class LLColorDetect_Test extends LinearOpMode {
         if (blobs == null || blobs.isEmpty()) return null;
 
         LLResultTypes.ColorResult largest = null;
-        double largestArea = MIN_AREA;
+        double largestArea = minArea;
         for (LLResultTypes.ColorResult blob : blobs) {
             double area = blob.getTargetArea();
             if (area > largestArea) {
