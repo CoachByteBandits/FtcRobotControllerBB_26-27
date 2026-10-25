@@ -12,22 +12,8 @@ import com.qualcomm.robotcore.util.Range;
 
 import java.util.List;
 
-/**
- * Limelight 3A color-detection OpMode: finds pollen blobs and drives toward the BIGGEST one.
- *
- * ---------------- LIMELIGHT PIPELINE SETUP (web UI at http://limelight.local:5801) ----------------
- * 1. Create a "Color" pipeline and put it in slot PIPELINE_INDEX (default 0).
- * 2. Use the eyedropper to pick the pollen color (usually yellow). Tune the HSV sliders until
- *    only pollen is highlighted.
- * 3. IMPORTANT for "pile" behavior: raise DILATE (and optionally lower ERODE) so that pollen
- *    sitting close together merge into ONE contour. A pile of 3 then produces a larger
- *    blob (larger target area) than a single pollen, which is what this code compares.
- * 4. Set a small Min Area filter (e.g. 0.05%) to ignore noise, and Sort Mode = Largest.
- * ---------------------------------------------------------------------------------------------
- */
 @Autonomous(name = "LL Color Detect Test", group = "Vision")
 public class LLColorDetect_Test extends LinearOpMode {
-
 
     //Tuning constants
     private static final int PIPELINE_INDEX = 0;
