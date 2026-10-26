@@ -57,9 +57,6 @@ public class LLColorDetect_Test extends LinearOpMode {
         limelight.setPollRateHz(100);
         limelight.pipelineSwitch(pipelineIndex);
 
-        telemetry.addLine("Ready. Press START to chase pollen.");
-        telemetry.update();
-
         waitForStart();
         limelight.start();
 
@@ -140,7 +137,6 @@ public class LLColorDetect_Test extends LinearOpMode {
         double fr = forward - turn;
         double br = forward - turn;
 
-        // Normalize so no motor exceeds 1.0
         double max = Math.max(1.0, Math.max(Math.max(Math.abs(fl), Math.abs(fr)),
                 Math.max(Math.abs(bl), Math.abs(br))));
 
