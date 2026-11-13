@@ -87,10 +87,12 @@ public class CustomDT_WFlowerIn extends LinearOpMode {
 
             // Intake Motor
             if (gamepad2.a) {
-                intakeMotor.setPower(1); // Full Intake Mode
-            }
-            else if (gamepad2.y) {
-                intakeMotor.setPower(0.4); //slow down intake when shooter gate is on
+                if (shooterGate.getPosition() == 0.1) {
+                    intakeMotor.setPower(1); // Full Intake Mode
+                }
+                else {
+                    intakeMotor.setPower(0.48); // Slow Intake Mode
+                }
             }
             else if (gamepad2.b) {
                 intakeMotor.setPower(-0.5); // Spit out stuck game elements
@@ -116,10 +118,10 @@ public class CustomDT_WFlowerIn extends LinearOpMode {
 
             // Shooter Gate
 
-            if (gamepad2.dpad_left) {
-                shooterGate.setPosition(0.0); //gate is closed
-            } else if (gamepad2.dpad_right) {
-                shooterGate.setPosition(0.1); // gate is open
+            if (gamepad2.dpad_right) {
+                shooterGate.setPosition(0.1); // gate is open until button is released
+            } else {
+                shooterGate.setPosition(0.0); // gate is closed by default
             }
 
 
