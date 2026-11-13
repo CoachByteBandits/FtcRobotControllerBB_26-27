@@ -7,7 +7,7 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
-@TeleOp
+@TeleOp(name = "CustomDT_CompRDY", group = "Linear OPMODE")
 public class CustomDT_WFlowerIn extends LinearOpMode {
     private ElapsedTime runtime = new ElapsedTime();
     private DcMotorEx leftFrontDrive = null;
