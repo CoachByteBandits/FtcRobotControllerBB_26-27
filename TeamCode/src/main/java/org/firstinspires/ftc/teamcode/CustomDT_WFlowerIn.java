@@ -1,4 +1,3 @@
-
 package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
@@ -15,56 +14,58 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 public class CustomDT_WFlowerIn extends LinearOpMode {
 
     private ElapsedTime runtime = new ElapsedTime();
-    private ElapsedTime gateTimer = new ElapsedTime();
     private ElapsedTime flowerTimer = new ElapsedTime();
 
-    private DcMotorEx leftFrontDrive = null;
-    private DcMotorEx leftBackDrive = null;
-    private DcMotorEx rightFrontDrive = null;
-    private DcMotorEx rightBackDrive = null;
-    private DcMotorEx intakeMotor = null;
-    private DcMotorEx shooter = null;
+    private DcMotorEx leftFrontDrive;
+    private DcMotorEx leftBackDrive;
+    private DcMotorEx rightFrontDrive;
+    private DcMotorEx rightBackDrive;
+    private DcMotorEx intakeMotor;
+    private DcMotorEx shooter;
 
-    // Flower continuous rotation servos
-    private CRServo leftFlower = null;
-    private CRServo rightFlower = null;
+    private CRServo leftFlower;
+    private CRServo rightFlower;
 
-    private Servo shooterGate = null;
-    private Servo rgb = null;
+    private Servo shooterGate;
+    private Servo rgb;
 
-    private DigitalChannel flowerLimit = null;
+    private DigitalChannel flowerLimit;
 
-    private boolean previousDpadLeft = false;
     private boolean previousDpadUp = false;
     private boolean previousDpadDown = false;
+    private boolean previousY = false;
+    private boolean yShooterOn = false;
 
-    private boolean gateMoving = false;
+    // ==========================================
+    // SHOOTER SPECIFICATIONS
+    // ==========================================
 
     static final double TICKS_PER_REV = 537.7;
     static final double MAX_RPM = 312.0;
+    static final double MAX_TICKS_PER_SEC = (MAX_RPM * TICKS_PER_REV) / 60.0;
 
-    static final double MAX_TICKS_PER_SEC =
-            (MAX_RPM * TICKS_PER_REV) / 60.0;
-
-    // RGB POSITIONS
-    static final double CYAN = 0.56;
-    static final double GREEN = 0.50;
-    static final double PINK = 0.72;
-
-    // RGB VELOCITY THRESHOLDS
-    static final double GREEN_MIN = 0.40;
-    static final double GREEN_MAX = 0.45;
-
-    // SHOOTER
+    static final double Y_BUTTON_POWER = 0.60;
     static final double TRIGGER_MODE_MAX_POWER = 1.0;
     static final double TRIGGER_DEADBAND = 0.05;
 
-    // SHOOTER GATE
-    static final double GATE_OUT = 0.20;
-    static final double GATE_IN = 0.0;
-    static final double GATE_OUT_TIME = 0.25;
+    // ==========================================
+    // RGB SETTINGS
+    // ==========================================
 
+    static final double CYAN = 0.56;
+    static final double GREEN = 0.50;
+
+    // ==========================================
+    // SHOOTER GATE
+    // ==========================================
+
+    static final double GATE_OUT = 0.2;
+    static final double GATE_IN = 0.0;
+
+    // ==========================================
     // FLOWER SETTINGS
+    // ==========================================
+
     static final double FLOWER_UP_POWER = -0.8;
     static final double FLOWER_DOWN_POWER = 0.3;
 
@@ -78,7 +79,6 @@ public class CustomDT_WFlowerIn extends LinearOpMode {
     }
 
     private FlowerState flowerState = FlowerState.IDLE;
-
     private boolean flowerAtTop = false;
     private boolean flowerTimedOut = false;
 
@@ -90,120 +90,90 @@ public class CustomDT_WFlowerIn extends LinearOpMode {
     @Override
     public void runOpMode() {
 
+        // ==========================================
         // HARDWARE SETUP
-        leftFrontDrive = hardwareMap.get(
-                DcMotorEx.class, "leftFrontDrive");
+        // ==========================================
 
-        leftBackDrive = hardwareMap.get(
-                DcMotorEx.class, "leftBackDrive");
+        leftFrontDrive = hardwareMap.get(DcMotorEx.class, "leftFrontDrive");
+        leftBackDrive = hardwareMap.get(DcMotorEx.class, "leftBackDrive");
+        rightFrontDrive = hardwareMap.get(DcMotorEx.class, "rightFrontDrive");
+        rightBackDrive = hardwareMap.get(DcMotorEx.class, "rightBackDrive");
 
-        rightFrontDrive = hardwareMap.get(
-                DcMotorEx.class, "rightFrontDrive");
+        intakeMotor = hardwareMap.get(DcMotorEx.class, "intakeMotor");
+        leftFlower = hardwareMap.get(CRServo.class, "leftFlower");
+        rightFlower = hardwareMap.get(CRServo.class, "rightFlower");
 
-        rightBackDrive = hardwareMap.get(
-                DcMotorEx.class, "rightBackDrive");
+        shooter = hardwareMap.get(DcMotorEx.class, "shooter");
+        shooterGate = hardwareMap.get(Servo.class, "shooterGate");
+        rgb = hardwareMap.get(Servo.class, "rgbFW");
 
-        intakeMotor = hardwareMap.get(
-                DcMotorEx.class, "intakeMotor");
-
-        leftFlower = hardwareMap.get(
-                CRServo.class, "leftFlower");
-
-        rightFlower = hardwareMap.get(
-                CRServo.class, "rightFlower");
-
-        shooter = hardwareMap.get(
-                DcMotorEx.class, "shooter");
-
-        shooterGate = hardwareMap.get(
-                Servo.class, "shooterGate");
-
-        rgb = hardwareMap.get(
-                Servo.class, "rgbFW");
-
-        flowerLimit = hardwareMap.get(
-                DigitalChannel.class, "flowerLimit");
-
+        flowerLimit = hardwareMap.get(DigitalChannel.class, "flowerLimit");
         flowerLimit.setMode(DigitalChannel.Mode.INPUT);
 
+        // ==========================================
         // MOTOR DIRECTIONS
+        // ==========================================
+
         leftFrontDrive.setDirection(DcMotorEx.Direction.REVERSE);
         leftBackDrive.setDirection(DcMotorEx.Direction.REVERSE);
-
         rightFrontDrive.setDirection(DcMotorEx.Direction.FORWARD);
         rightBackDrive.setDirection(DcMotorEx.Direction.FORWARD);
 
         intakeMotor.setDirection(DcMotorSimple.Direction.REVERSE);
 
-        // REVERSED FLOWER SERVOS
         leftFlower.setDirection(DcMotorSimple.Direction.REVERSE);
         rightFlower.setDirection(DcMotorSimple.Direction.REVERSE);
 
         shooter.setDirection(DcMotorEx.Direction.REVERSE);
-
         shooterGate.setDirection(Servo.Direction.FORWARD);
 
-        // SHOOTER ENCODER
-        shooter.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        shooter.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        // ==========================================
+        // SHOOTER MODE (RUN WITHOUT ENCODER)
+        // ==========================================
 
+        shooter.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        shooter.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+
+        // ==========================================
         // INITIAL POSITIONS
+        // ==========================================
+
         shooterGate.setPosition(GATE_IN);
         rgb.setPosition(CYAN);
-
         setFlowerPower(0.0);
 
-        // FLOWER HOMING
-        // Raises the flower until the limit switch is pressed.
+        // ==========================================
+        // FLOWER HOMING (INIT PHASE)
+        // ==========================================
+
         flowerAtTop = false;
         flowerTimedOut = false;
         flowerTimer.reset();
 
-        telemetry.addData("Status", "Initialized - homing flower");
+        telemetry.addData("Status", "Initializing - homing flower");
         telemetry.update();
 
         while (!isStarted() && !isStopRequested()) {
 
-            // Assumes getState() returns true when physically pressed.
             boolean homePressed = flowerLimit.getState();
 
             if (!flowerAtTop && !flowerTimedOut) {
-
                 if (homePressed) {
-
                     setFlowerPower(0.0);
                     flowerAtTop = true;
-
-                } else if (flowerTimer.seconds()
-                        >= FLOWER_UP_TIMEOUT_SEC) {
-
+                } else if (flowerTimer.seconds() >= FLOWER_UP_TIMEOUT_SEC) {
                     setFlowerPower(0.0);
                     flowerTimedOut = true;
-
                 } else {
-
                     setFlowerPower(FLOWER_UP_POWER);
                 }
             }
 
-            telemetry.addData(
-                    "Flower Homed",
-                    flowerAtTop ? "YES - UP" : "NO - moving up...");
-
-            telemetry.addData(
-                    "Flower Limit Switch",
-                    homePressed ? "PRESSED" : "NOT PRESSED");
-
-            telemetry.addData(
-                    "Flower Limit RAW getState",
-                    flowerLimit.getState());
-
+            telemetry.addData("Flower Homed", flowerAtTop ? "YES - UP" : "NO - moving up");
+            telemetry.addData("Flower Limit Switch", homePressed ? "PRESSED" : "NOT PRESSED");
             if (flowerTimedOut) {
-                telemetry.addData(
-                        "WARNING",
-                        "Timed out - check switch / direction.");
+                telemetry.addData("WARNING", "Check flower switch and direction");
             }
-
             telemetry.update();
         }
 
@@ -212,11 +182,16 @@ public class CustomDT_WFlowerIn extends LinearOpMode {
         waitForStart();
         runtime.reset();
 
+        // ==========================================
+        // MAIN TELEOP LOOP
+        // ==========================================
+
         while (opModeIsActive()) {
 
-            double max;
-
+            // ======================================
             // DRIVETRAIN
+            // ======================================
+
             double axial = -gamepad1.left_stick_y;
             double lateral = gamepad1.left_stick_x;
             double yaw = gamepad1.right_stick_x;
@@ -226,15 +201,11 @@ public class CustomDT_WFlowerIn extends LinearOpMode {
             double leftBackPower = axial - lateral + yaw;
             double rightBackPower = axial + lateral - yaw;
 
-            max = Math.max(
-                    Math.abs(leftFrontPower),
-                    Math.abs(rightFrontPower));
-
+            double max = Math.max(Math.abs(leftFrontPower), Math.abs(rightFrontPower));
             max = Math.max(max, Math.abs(leftBackPower));
             max = Math.max(max, Math.abs(rightBackPower));
 
             if (max > 1.0) {
-
                 leftFrontPower /= max;
                 rightFrontPower /= max;
                 leftBackPower /= max;
@@ -246,258 +217,136 @@ public class CustomDT_WFlowerIn extends LinearOpMode {
             leftBackDrive.setPower(leftBackPower);
             rightBackDrive.setPower(rightBackPower);
 
-            // MAIN INTAKE MOTOR
+            // ======================================
+            // MAIN INTAKE
+            // ======================================
+
             if (gamepad2.a) {
-
                 intakeMotor.setPower(1.0);
-
             } else if (gamepad2.b) {
-
                 intakeMotor.setPower(-1.0);
-
             } else if (gamepad2.x) {
-
                 intakeMotor.setPower(0.0);
             }
 
-            // FLOWER INTAKE
-            // Read the limit switch.
+            // ======================================
+            // FLOWER TRANSFER STATE MACHINE
+            // ======================================
+
             boolean flowerLimitPressed = flowerLimit.getState();
+            boolean dpadUpPressed = gamepad2.dpad_up && !previousDpadUp;
+            boolean dpadDownPressed = gamepad2.dpad_down && !previousDpadDown;
 
-            // Detect new button presses instead of holding the button.
-            boolean dpadUpPressed =
-                    gamepad2.dpad_up && !previousDpadUp;
-
-            boolean dpadDownPressed =
-                    gamepad2.dpad_down && !previousDpadDown;
-
-            // D-PAD UP: RAISE FLOWER
             if (dpadUpPressed && !flowerLimitPressed) {
-
                 flowerTimedOut = false;
                 flowerAtTop = false;
-
                 flowerState = FlowerState.GOING_UP;
                 flowerTimer.reset();
-            }
-
-            // D-PAD DOWN: LOWER FLOWER
-            else if (dpadDownPressed) {
-
+            } else if (dpadDownPressed) {
                 flowerAtTop = false;
                 flowerTimedOut = false;
-
                 flowerState = FlowerState.GOING_DOWN;
                 flowerTimer.reset();
             }
 
-            // FLOWER MOVEMENT CONTROL
             switch (flowerState) {
-
                 case GOING_UP:
-
-                    // Stop immediately when the limit switch is pressed.
                     if (flowerLimitPressed) {
-
                         setFlowerPower(0.0);
-
                         flowerAtTop = true;
                         flowerTimedOut = false;
-
                         flowerState = FlowerState.IDLE;
-
-                    }
-
-                    // Safety timeout if the switch never activates.
-                    else if (flowerTimer.seconds()
-                            >= FLOWER_UP_TIMEOUT_SEC) {
-
+                    } else if (flowerTimer.seconds() >= FLOWER_UP_TIMEOUT_SEC) {
                         setFlowerPower(0.0);
-
                         flowerTimedOut = true;
                         flowerState = FlowerState.IDLE;
-
-                    }
-
-                    // Continue moving upward.
-                    else {
-
+                    } else {
                         setFlowerPower(FLOWER_UP_POWER);
                     }
-
                     break;
 
                 case GOING_DOWN:
-
-                    // Stop after the selected downward movement time.
-                    if (flowerTimer.seconds()
-                            >= FLOWER_DOWN_TIME_SEC) {
-
+                    if (flowerTimer.seconds() >= FLOWER_DOWN_TIME_SEC) {
                         setFlowerPower(0.0);
                         flowerState = FlowerState.IDLE;
-
                     } else {
-
                         setFlowerPower(FLOWER_DOWN_POWER);
                     }
-
                     break;
 
                 case IDLE:
                 default:
-
                     setFlowerPower(0.0);
                     break;
             }
 
-            // Remember button states for the next loop.
             previousDpadUp = gamepad2.dpad_up;
             previousDpadDown = gamepad2.dpad_down;
 
-            // SHOOTER: TRIGGERS ONLY
-            double shooterPower =
-                    gamepad2.right_trigger
-                            - gamepad2.left_trigger;
+            // ======================================
+            // SHOOTER CONTROLS (DIRECT POWER)
+            // ======================================
 
-            boolean shooterRunning =
-                    Math.abs(shooterPower) > TRIGGER_DEADBAND;
+            boolean yPressed = gamepad2.y && !previousY;
+            previousY = gamepad2.y;
 
-            shooterPower = Math.max(
-                    -TRIGGER_MODE_MAX_POWER,
-                    Math.min(TRIGGER_MODE_MAX_POWER, shooterPower));
+            if (yPressed) {
+                yShooterOn = !yShooterOn;
+            }
 
-            // SHOOTER SET VELOCITY
+            double shooterPower = gamepad2.right_trigger - gamepad2.left_trigger;
+
+            if (Math.abs(shooterPower) > TRIGGER_DEADBAND) {
+                yShooterOn = false;
+            } else if (yShooterOn) {
+                shooterPower = Y_BUTTON_POWER;
+            }
+
+            boolean shooterRunning = Math.abs(shooterPower) > TRIGGER_DEADBAND;
+            shooterPower = Math.max(-TRIGGER_MODE_MAX_POWER, Math.min(TRIGGER_MODE_MAX_POWER, shooterPower));
+
             if (shooterRunning) {
-
-                shooter.setVelocity(
-                        shooterPower * MAX_TICKS_PER_SEC);
-
-            } else {
-
-                shooter.setVelocity(0.0);
-            }
-
-            // ACTUAL SHOOTER VELOCITY
-            double shooterVelocity =
-                    Math.abs(shooter.getVelocity());
-
-            double shooterRPM =
-                    (shooterVelocity / TICKS_PER_REV) * 60.0;
-
-            // RGB CHECKS ACTUAL MEASURED VELOCITY
-            double velocityFraction =
-                    shooterVelocity / MAX_TICKS_PER_SEC;
-
-            String shooterStatus;
-
-            if (!shooterRunning) {
-
-                rgb.setPosition(CYAN);
-                shooterStatus = "OFF - CYAN";
-
-            } else if (velocityFraction >= GREEN_MIN
-                    && velocityFraction <= GREEN_MAX) {
-
+                shooter.setPower(shooterPower);
                 rgb.setPosition(GREEN);
-                shooterStatus = "IN RANGE - GREEN";
-
-            } else if (velocityFraction > GREEN_MAX) {
-
-                rgb.setPosition(PINK);
-                shooterStatus = "OVER SPEED - PINK";
-
             } else {
-
+                shooter.setPower(0.0);
                 rgb.setPosition(CYAN);
-                shooterStatus = "UNDER SPEED - CYAN";
             }
 
+            // ======================================
             // SHOOTER GATE
-            // Press once: moves out and automatically returns.
-            if (gamepad2.dpad_left
-                    && !previousDpadLeft
-                    && !gateMoving) {
+            // ======================================
 
-                gateMoving = true;
-                gateTimer.reset();
-
+            if (gamepad2.dpad_left) {
                 shooterGate.setPosition(GATE_OUT);
-            }
-
-            if (gateMoving
-                    && gateTimer.seconds() >= GATE_OUT_TIME) {
-
+            } else {
                 shooterGate.setPosition(GATE_IN);
-                gateMoving = false;
             }
 
-            previousDpadLeft = gamepad2.dpad_left;
-
+            // ======================================
             // TELEMETRY
+            // ======================================
+
             telemetry.addData("FL Wheel", leftFrontPower);
             telemetry.addData("FR Wheel", rightFrontPower);
             telemetry.addData("BL Wheel", leftBackPower);
             telemetry.addData("BR Wheel", rightBackPower);
-
-            telemetry.addData(
-                    "Intake Motor Power",
-                    intakeMotor.getPower());
-
+            telemetry.addData("Intake Power", intakeMotor.getPower());
             telemetry.addData("Flower State", flowerState);
-
-            telemetry.addData(
-                    "Left Flower Power",
-                    leftFlower.getPower());
-
-            telemetry.addData(
-                    "Right Flower Power",
-                    rightFlower.getPower());
-
-            telemetry.addData(
-                    "Flower Limit Switch",
-                    flowerLimitPressed ? "PRESSED" : "NOT PRESSED");
-
-            telemetry.addData("Flower At Top", flowerAtTop);
-
-            if (flowerTimedOut) {
-
-                telemetry.addData(
-                        "WARNING",
-                        "Flower timed out - switch never pressed");
-            }
-
-            telemetry.addData(
-                    "Shooter Power Fraction",
-                    "%.2f", shooterPower);
-
-            telemetry.addData(
-                    "Shooter RPM",
-                    "%.1f", shooterRPM);
-
-            telemetry.addData(
-                    "Shooter Velocity",
-                    "%.1f ticks/sec", shooterVelocity);
-
-            telemetry.addData(
-                    "Velocity Fraction",
-                    "%.3f", velocityFraction);
-
-            telemetry.addData(
-                    "Shooter Status",
-                    shooterStatus);
-
-            telemetry.addData(
-                    "Shooter Gate",
-                    gateMoving ? "MOVING OUT" : "IN");
-
+            telemetry.addData("Flower Limit Switch", flowerLimitPressed ? "PRESSED" : "NOT PRESSED");
+            telemetry.addData("Y Preset Active", yShooterOn);
+            telemetry.addData("Shooter Power", "%.3f", shooterPower);
+            telemetry.addData("Shooter Gate Position", shooterGate.getPosition());
             telemetry.update();
         }
 
-        // STOP MOTORS WHEN TELEOP ENDS
+        // ==========================================
+        // STOP MOTORS
+        // ==========================================
+
         setFlowerPower(0.0);
         intakeMotor.setPower(0.0);
         shooter.setPower(0.0);
-
         leftFrontDrive.setPower(0.0);
         leftBackDrive.setPower(0.0);
         rightFrontDrive.setPower(0.0);
