@@ -115,7 +115,7 @@ public class ShooterPIDFTest1 extends LinearOpMode {
                 F -= fStep;
             }
 
-            // I adjustment
+            // Variable I adjustment
             if (gamepad1.x && !prevX) {
                 I += iStep;
             }
