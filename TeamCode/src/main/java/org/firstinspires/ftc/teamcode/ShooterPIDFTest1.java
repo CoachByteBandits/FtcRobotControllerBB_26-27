@@ -1,24 +1,33 @@
+
 package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
+import com.qualcomm.robotcore.hardware.Servo;
 
 @TeleOp(name = "Shooter PIDF Tuning")
 public class ShooterPIDFTest1 extends LinearOpMode {
+
     private DcMotorEx shooter;
-    private double targetVelocity = 1200; //TPS
+    private DcMotorEx intakeMotor;
+    private Servo shooterGate = null;
 
-    // PIDF coefficients
-    private double P;
-    private double I;
-    private double D;
-    private double F;
+    private double targetVelocity = 1150;
 
-    // Adjustment modes
+    // Starting PIDF values
+    private double P = 5.9;
+    private double I = 3.035;
+    private double D = 0.017;
+    private double F = 1.98;
+
     private boolean fineMode = false;
+    // Shooter Gate Positions
+    static final double GATE_OUT = 0.2; // Gate Open
+    static final double GATE_IN = 0.0; // Gate Closed
 
     // Button press detection
     private boolean prevA, prevB;
@@ -31,38 +40,29 @@ public class ShooterPIDFTest1 extends LinearOpMode {
     @Override
     public void runOpMode() {
 
-        shooter = hardwareMap.get(
-                DcMotorEx.class, "shooter"
-        );
+        shooter     = hardwareMap.get(DcMotorEx.class, "shooter");
+        intakeMotor = hardwareMap.get(DcMotorEx.class, "intakeMotor");
+        shooterGate = hardwareMap.get(Servo.class, "shooterGate");
 
-        shooter.setDirection(DcMotor.Direction.FORWARD);
+        shooter.setDirection(DcMotor.Direction.REVERSE);
+        shooter.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+        shooter.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
-        shooter.setZeroPowerBehavior(
-                DcMotor.ZeroPowerBehavior.FLOAT
-        );
+        intakeMotor.setDirection(DcMotor.Direction.REVERSE);
 
-        shooter.setMode(
-                DcMotor.RunMode.RUN_USING_ENCODER
-        );
+        // Apply starting PIDF values
+        shooter.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, new PIDFCoefficients(P, I, D, F));
 
-        // Read existing motor controller PIDF values
-        PIDFCoefficients currentPIDF =
-                shooter.getPIDFCoefficients(
-                        DcMotor.RunMode.RUN_USING_ENCODER
-                );
-
-        P = currentPIDF.p;
-        I = currentPIDF.i;
-        D = currentPIDF.d;
-        F = currentPIDF.f;
+        // Set Shooter Gate position to closed
+        shooterGate.setPosition(GATE_IN);
 
         telemetry.addLine("SHOOTER PIDF TUNING");
-        telemetry.addLine("-------------------------");
-        telemetry.addData("Initial P", P);
-        telemetry.addData("Initial I", I);
-        telemetry.addData("Initial D", D);
-        telemetry.addData("Initial F", F);
-        telemetry.addLine("-------------------------");
+        telemetry.addLine("");
+        telemetry.addData("Starting P", P);
+        telemetry.addData("Starting I", I);
+        telemetry.addData("Starting D", D);
+        telemetry.addData("Starting F", F);
+        telemetry.addLine("");
         telemetry.addLine("Press START to begin");
         telemetry.update();
 
@@ -70,10 +70,10 @@ public class ShooterPIDFTest1 extends LinearOpMode {
 
         while (opModeIsActive()) {
 
-            // =================================
-            // ADJUSTMENT STEP SIZES
-            // =================================
+            // Intake Motor
+            intakeMotor.setVelocity(1120);
 
+            // Adjustment step sizes
             double pStep = fineMode ? 0.01 : 0.1;
             double iStep = fineMode ? 0.0001 : 0.001;
             double dStep = fineMode ? 0.0001 : 0.001;
@@ -81,15 +81,12 @@ public class ShooterPIDFTest1 extends LinearOpMode {
 
             double velocityStep = fineMode ? 1 : 10;
 
-            // Toggle fine adjustment mode
+            // Toggle fine mode
             if (gamepad1.left_stick_button && !prevStick) {
                 fineMode = !fineMode;
             }
 
-            // =================================
-            // TARGET VELOCITY
-            // =================================
-
+            // Target velocity
             if (gamepad1.a && !prevA) {
                 targetVelocity += velocityStep;
             }
@@ -100,10 +97,7 @@ public class ShooterPIDFTest1 extends LinearOpMode {
 
             targetVelocity = Math.max(0, targetVelocity);
 
-            // =================================
-            // P COEFFICIENT
-            // =================================
-
+            // P adjustment
             if (gamepad1.dpad_up && !prevUp) {
                 P += pStep;
             }
@@ -112,10 +106,7 @@ public class ShooterPIDFTest1 extends LinearOpMode {
                 P -= pStep;
             }
 
-            // =================================
-            // F COEFFICIENT
-            // =================================
-
+            // F adjustment
             if (gamepad1.dpad_right && !prevRight) {
                 F += fStep;
             }
@@ -124,10 +115,7 @@ public class ShooterPIDFTest1 extends LinearOpMode {
                 F -= fStep;
             }
 
-            // =================================
-            // I COEFFICIENT
-            // =================================
-
+            // I adjustment
             if (gamepad1.x && !prevX) {
                 I += iStep;
             }
@@ -136,10 +124,7 @@ public class ShooterPIDFTest1 extends LinearOpMode {
                 I -= iStep;
             }
 
-            // =================================
-            // D COEFFICIENT
-            // =================================
-
+            // D adjustment
             if (gamepad1.right_bumper && !prevRB) {
                 D += dStep;
             }
@@ -148,16 +133,13 @@ public class ShooterPIDFTest1 extends LinearOpMode {
                 D -= dStep;
             }
 
-            // Prevent negative PIDF values
+            // Prevent negative coefficients
             P = Math.max(0, P);
             I = Math.max(0, I);
             D = Math.max(0, D);
             F = Math.max(0, F);
 
-            // =================================
-            // UPDATE PREVIOUS BUTTON STATES
-            // =================================
-
+            // Update previous button states
             prevA = gamepad1.a;
             prevB = gamepad1.b;
 
@@ -175,54 +157,60 @@ public class ShooterPIDFTest1 extends LinearOpMode {
 
             prevStick = gamepad1.left_stick_button;
 
-            // =================================
-            // APPLY PIDF TO MOTOR CONTROLLER
-            // =================================
-
+            // Apply updated PIDF values
             shooter.setPIDFCoefficients(
                     DcMotor.RunMode.RUN_USING_ENCODER,
                     new PIDFCoefficients(P, I, D, F)
             );
 
-            // =================================
-            // SHOOTER VELOCITY CONTROL
-            // =================================
-
+            // Set shooter velocity
             shooter.setVelocity(targetVelocity);
 
+            // Read actual velocity
             double actualVelocity = shooter.getVelocity();
 
+            // Calculate velocity error
             double error = targetVelocity - actualVelocity;
 
-            double errorPercent = targetVelocity > 0? (Math.abs(error) / targetVelocity) * 100: 0;
+            double errorPercent = targetVelocity > 0
+                    ? (Math.abs(error) / targetVelocity) * 100
+                    : 0;
 
             // Telemetry
+            telemetry.addLine("Shooter PIDF");
 
-            telemetry.addLine("========== SHOOTER PIDF ==========");
-            telemetry.addLine("--- VELOCITY ---");
+            telemetry.addLine("Velocity");
             telemetry.addData("Target Velocity", "%.2f ticks/sec", targetVelocity);
             telemetry.addData("Actual Velocity", "%.2f ticks/sec", actualVelocity);
             telemetry.addData("Velocity Error", "%.2f ticks/sec", error);
             telemetry.addData("Error Percentage", "%.3f%%", errorPercent);
-            telemetry.addLine("-------------------------------");
-            telemetry.addLine("--- PIDF COEFFICIENTS ---");
+            telemetry.addLine("");
+
+            telemetry.addLine("PIDF Coefficients");
             telemetry.addData("P", "%.5f", P);
             telemetry.addData("I", "%.5f", I);
             telemetry.addData("D", "%.5f", D);
             telemetry.addData("F", "%.5f", F);
-            telemetry.addLine("-------------------------------");
+            telemetry.addLine("");
+
             telemetry.addData("Adjustment Mode", fineMode ? "FINE" : "NORMAL");
+
             telemetry.addData("Velocity Step", "%.2f", velocityStep);
-            telemetry.addLine("-------------------------------");
+            telemetry.addLine("");
             telemetry.addLine("A/B: Target Velocity +/-");
-            telemetry.addLine("Dpad Up/Down: P +/-");
             telemetry.addLine("Dpad Left/Right: F +/-");
-            telemetry.addLine("X/Y: I +/-");
+            telemetry.addLine("Dpad Up/Down: P +/-");
             telemetry.addLine("Bumpers: D +/-");
+            telemetry.addLine("X/Y: I +/-");
             telemetry.addLine("Left Stick Button: Toggle Fine Mode");
+
             telemetry.update();
 
-            sleep(50);
+            sleep(2000);
+            intakeMotor.setVelocity(2800);
+            sleep(1000);
+            shooterGate.setPosition(GATE_OUT);
+            sleep(10000);
         }
 
         // Stop shooter
